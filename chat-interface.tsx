@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Copy, Download, ThumbsUp, ThumbsDown } from 'lucide-react'
 import { cn } from "@/lib/utils"
+import axios from "axios"
 
 interface Message {
   role: "agent" | "user"
@@ -15,7 +16,12 @@ interface Message {
 
 export default function ChatInterface() {
   const [input, setInput] = useState("")
-  const [messages] = useState<Message[]>([
+  const [messages, setMessages] = useState<Message[]>([{
+    role: "agent",
+    content: "Hello, I am a generative AI agent. How may I assist you today?",
+    timestamp: "4:08:28 PM"
+  },])
+  let examples = [
     {
       role: "agent",
       content: "Hello, I am a generative AI agent. How may I assist you today?",
@@ -31,7 +37,31 @@ export default function ChatInterface() {
       content: "Please hold for a second.\n\nOk, I can help you with that\n\nI'm pulling up your current bill information\n\nYour current bill is $150, and it is due on August 31, 2024.\n\nIf you need more details, feel free to ask!",
       timestamp: "4:08:37 PM"
     }
-  ])
+  ]
+
+  const handleSend = async () => {
+    if (!input.trim()) return
+
+    const newMessage: Message = {
+      role: "user",
+      content: input.trim(),
+      timestamp: new Date().toLocaleTimeString()
+    }
+
+    setMessages((prev) => [...prev, newMessage])
+    setInput("")
+    const res = await axios.post("/api/query", {query: newMessage.content})
+    if (res.data.data) {
+      const newResponse: Message = {
+        role: "agent",
+        content: res.data.data,
+        timestamp: new Date().toLocaleTimeString()
+      }
+      setMessages((prev) => [...prev, newResponse])
+    }
+    
+    
+  }
 
   return (
     <div className="flex-1 flex flex-col">
@@ -89,7 +119,7 @@ export default function ChatInterface() {
             onChange={(e) => setInput(e.target.value)}
             className="min-h-[44px] max-h-32"
           />
-          <Button className="px-8">Send</Button>
+          <Button className="px-8" onClick={handleSend}>Send</Button>
         </div>
       </div>
     </div>

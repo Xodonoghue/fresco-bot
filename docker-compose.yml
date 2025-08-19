@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev        # see below
+    command: npm run dev                # e.g. "next dev"
+    ports:
+      - "3002:3000"                     # host:container
+    env_file:
+      - .env                            # loads your whole .env into the container
+    environment:
+      NODE_ENV: development
+      WATCHPACK_POLLING: "true"         # Next.js/Webpack file watching in Docker (macOS/Win)
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "300"
+    volumes:
+      - .:/app                          # bind mount your repo
+      - /app/node_modules               # keep container node_modules isolated
+    # Uncomment if your dev server needs extra fs notifications
+    # sysctls:
+    #   - fs.inotify.max_user_watches=524288
