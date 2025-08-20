@@ -1,47 +1,33 @@
-# ---- Base (with Poppler + fonts) ----
-    FROM node:20-bookworm-slim AS base
-    ENV DEBIAN_FRONTEND=noninteractive
-    RUN apt-get update && apt-get install -y --no-install-recommends \
-        poppler-utils pdf2svg fonts-dejavu fonts-liberation ca-certificates \
-      && rm -rf /var/lib/apt/lists/*
-    
-    # ---- Dependencies (install dev deps for build) ----
-    FROM base AS deps
-    WORKDIR /app
-    COPY package.json package-lock.json* ./
-    RUN npm ci --legacy-peer-deps
-    
-    # ---- Build (Next.js) ----
-    FROM base AS builder
-    WORKDIR /app
-    ENV NEXT_TELEMETRY_DISABLED=1
-    COPY --from=deps /app/node_modules ./node_modules
-    COPY . .
-    RUN npm run build --legacy-peer-deps
-    
-    # ---- Runner (production-only deps) ----
-    FROM base AS runner
-    WORKDIR /app
-    ENV NODE_ENV=production
-    ENV NEXT_TELEMETRY_DISABLED=1
-    # Copy app artifacts
-    COPY --from=builder /app/.next ./.next
-    COPY --from=builder /app/public ./public
-    COPY --from=builder /app/package.json ./package.json
-    COPY --from=builder /app/next.config.mjs ./next.config.mjs
-    # If your config file is .mjs, copy it instead:
-    # COPY --from=builder /app/next.config.mjs ./next.config.mjs
-    
-    # Install only production dependencies
-    COPY package-lock.json* ./
-    RUN npm ci --omit=dev --no-audit --prefer-offline --legacy-peer-deps
-    
-    # (Optional) run as non-root for security
-    USER node
-    
-    # App port (Railway uses PORT env automatically)
-    ENV PORT=3000
-    EXPOSE 3000
-    
-    CMD ["npm", "start"]
-    
+# Use a Debian-based Node image so sharp prebuilt binaries work cleanly
+FROM node:20-bookworm-slim
+
+# Install native deps required by pdf2pic and friends
+# - graphicsmagick: image processing backend used by pdf2pic
+# - ghostscript: to read PDFs for conversion
+# - curl: useful for health/debug
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    graphicsmagick ghostscript ca-certificates curl \
+  && rm -rf /var/lib/apt/lists/*
+
+# App directory
+WORKDIR /app
+
+# Install deps first (better caching)
+COPY package*.json ./
+RUN npm ci --omit=dev --legacy-peer-deps
+
+# Copy source
+COPY . .
+
+# Build (for Next.js etc.)
+RUN npm run build --legacy-peer-deps
+
+
+# Railway provides PORT; Next listens on it in production
+ENV NODE_ENV=production
+ENV PORT=3000
+
+EXPOSE 3000
+
+# Start Next.js
+CMD ["npm", "run", "start"]
