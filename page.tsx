@@ -36,6 +36,9 @@ export default function KnowledgeChatbot() {
         // or formData.append(`file_${i}`, file); if you want unique keys
     });
     try {
+        if (uploadedFiles.length === 0) {
+          await axios.post("/api/delete-all", {})
+        }
         const res = await axios.post("/api/ingest", formData)
         if (res.data.files){
             setUploadedFiles((prevFiles) => [...prevFiles, ...res.data.files])
@@ -86,9 +89,17 @@ export default function KnowledgeChatbot() {
     [uploadFiles],
   )
 
-  const removeFile = useCallback((fileId: string) => {
-    setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId))
-  }, [])
+  const removeFile = useCallback(async (fileId: string) => {
+    const file = uploadedFiles.find(f => f.id === fileId);
+    if (!file) return; 
+  
+    try {
+      await axios.post("/api/delete-specific", { file: file.name });
+      setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
+    } catch (err) {
+      console.error("Delete failed:", err);
+    }
+  }, [uploadedFiles]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 Bytes"
