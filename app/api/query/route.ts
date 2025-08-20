@@ -1,5 +1,5 @@
 import { pipeline } from "@xenova/transformers";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseAdmin } from "@/utils/supabase/supabase-admin";
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 import { getEnvVar } from "@/utils/env";
@@ -8,10 +8,8 @@ import {
     SiglipTextModel,
   } from "@xenova/transformers";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export const runtime = "nodejs";            // ensure Node runtime (not Edge)
+export const dynamic = "force-dynamic";
 
 let textTokenizer: any = null;
 let textModel: any = null;
@@ -272,6 +270,7 @@ async function getTextEmbedding(text: string) {
 
 
 async function queryPdf(question: string) {
+  const supabase = getSupabaseAdmin()
   // 1️⃣ Convert query → embedding
   const queryEmbedding = await getTextEmbedding(question);
 

@@ -5,7 +5,7 @@ import { fromBuffer } from "pdf2pic";
 import sharp from "sharp";
 import fs from "fs/promises";
 import { OpenAI } from "openai";
-import { getEnvVar } from "@/utils/env";
+import { getSupabaseAdmin } from "@/utils/supabase/supabase-admin";
 import {
   AutoTokenizer,
   SiglipTextModel,
@@ -25,12 +25,6 @@ interface UploadedFile {
     size: number
     uploadedAt: Date
   }
-
-// 🔑 Init Supabase
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // Temporary storage
 const UPLOAD_DIR = "/tmp/pdf_uploads";
@@ -159,6 +153,7 @@ async function getDescription(imageUrl: string): Promise<string|null> {
 
 // ---------- MAIN INGEST ----------
 async function ingestPdf(file: File): Promise<UploadedFile | undefined> {
+  const supabase = getSupabaseAdmin()
   const pageImages = await pdfToImageBuffers(file);
 
   for (let i = 0; i < pageImages.length; i++) {
