@@ -2,6 +2,7 @@ import { pipeline } from "@xenova/transformers";
 import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
+import { getEnvVar } from "@/utils/env";
 import {
     AutoTokenizer,
     SiglipTextModel,

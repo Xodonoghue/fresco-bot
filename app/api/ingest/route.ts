@@ -5,6 +5,7 @@ import { fromBuffer } from "pdf2pic";
 import sharp from "sharp";
 import fs from "fs/promises";
 import { OpenAI } from "openai";
+import { getEnvVar } from "@/utils/env";
 import {
   AutoTokenizer,
   SiglipTextModel,
