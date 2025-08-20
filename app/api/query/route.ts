@@ -160,11 +160,10 @@ async function getTextEmbedding(text: string) {
     };
   }
   
-  // ---------- OpenAI ----------
-  const openai = getOpenAI();
   
   // Phase 1: EXTRACT (structured, no prose)
   async function runExtractPhase(question: string, matches: Match[]) {
+    const openai = getOpenAI()
     const schema = `
   Return ONLY valid minified JSON with this schema:
   {
@@ -205,6 +204,7 @@ async function getTextEmbedding(text: string) {
     matches: Match[],
     extracted: any
   ) {
+    const openai = getOpenAI()
     const answerSchema = `
   Return ONLY valid minified JSON with this schema:
   {
