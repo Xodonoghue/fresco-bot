@@ -5,9 +5,6 @@ import { NextRequest, NextResponse } from "next/server";
 import {
     AutoTokenizer,
     SiglipTextModel,
-    AutoProcessor,
-    SiglipVisionModel,
-    RawImage,
   } from "@xenova/transformers";
 
 const supabase = createClient(
