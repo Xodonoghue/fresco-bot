@@ -101,7 +101,7 @@ export default function KnowledgeChatbot() {
   }
 
   return (
-    <div className="h-full dark:from-slate-950 dark:to-slate-900 bg-fixed">
+    <div className="h-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 bg-fixed">
       {/* Header */}
       <div className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 py-6">
@@ -110,8 +110,8 @@ export default function KnowledgeChatbot() {
               <Database className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Fresco Construction Agent</h1>
-              <p className="text-slate-600 dark:text-slate-400">Upload documents and get specific answers</p>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Knowledge Chatbot</h1>
+              <p className="text-slate-600 dark:text-slate-400">Upload documents and chat with your knowledge base</p>
             </div>
           </div>
         </div>
@@ -122,7 +122,7 @@ export default function KnowledgeChatbot() {
           {/* Chat Section */}
           <div className="flex flex-col mx-auto w-7/12">
             <div className="mb-4">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Chat with Agent</h2>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Chat with Knowledge Base</h2>
               <p className="text-sm text-slate-600 dark:text-slate-400">Ask questions about your uploaded documents</p>
             </div>
             <div className="flex-1 overflow-hidden">
@@ -188,26 +188,10 @@ export default function KnowledgeChatbot() {
                           onChange={handleFileInputChange}
                           className="hidden"
                         />
-                        {loadingFiles.map((file, i) => (
-                          <div
-                            key={i}
-                            className="mt-4 flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800"
-                          >
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <Loader2 className="w-4 h-4 text-blue-500 flex-shrink-0 animate-spin" />
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
-                                  {file.name}
-                                </p>
-                                <p className="text-xs text-blue-600 dark:text-blue-400">Processing...</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
                       </div>
                     </CardContent>
                   </Card>
-                  <Card className="mb-4">
+                  <Card>
                     <ChatInterface />
                   </Card>
                 </div>

@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { fromBuffer } from "pdf2pic";
 import sharp from "sharp";
 import fs from "fs/promises";
+import { OpenAI } from "openai";
 import {
   AutoTokenizer,
   SiglipTextModel,
@@ -11,6 +12,18 @@ import {
   SiglipVisionModel,
   RawImage,
 } from "@xenova/transformers";
+
+const client = new OpenAI({
+	baseURL: "https://router.huggingface.co/v1",
+	apiKey: process.env.HF_TOKEN,
+});
+
+interface UploadedFile {
+    id: string
+    name: string
+    size: number
+    uploadedAt: Date
+  }
 
 // 🔑 Init Supabase
 const supabase = createClient(
@@ -116,8 +129,35 @@ async function getImageEmbedding(imgBuffer: Buffer) {
   return normalizeEmbedding(output.pooler_output.data); // Float32Array
 }
 
+// simple-qwen-call.ts
+async function getDescription(imageUrl: string): Promise<string|null> {
+    const prompt = `You are analyzing architectural drawings and plans. Your job is to scan the image below and provide a textual description describing everything you see in the image. This includes things like measurements, heights, counts of objects, material indicators, notes, scales dimensions etc. It is VITAL that you DON'T MAKE ANY INFORMATION UP. USE ONLY THE IMAGE to create this description>`;
+
+  // 4️⃣ Send to GPT-4o (multimodal capable)
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const response = await openai.chat.completions.create({
+    model: "gpt-4.1-mini", // supports vision + text
+    messages: [
+      { role: "system", content: "You are a helpful assistant for architectural drawings." },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: prompt },
+          {
+            type: "image_url",
+            image_url: {url: imageUrl},
+          },
+        ],
+      },
+    ],
+  });
+
+  return response.choices[0].message.content;
+  }
+  
+
 // ---------- MAIN INGEST ----------
-async function ingestPdf(file: File) {
+async function ingestPdf(file: File): Promise<UploadedFile | undefined> {
   const pageImages = await pdfToImageBuffers(file);
 
   for (let i = 0; i < pageImages.length; i++) {
@@ -144,16 +184,30 @@ async function ingestPdf(file: File) {
     const imgEmbedding = await getImageEmbedding(imgBuffer);
 
     // b) Text embedding
-    // const caption = `Page ${i + 1} of ${file.name}, architectural drawing`;
-    // const textEmbedding = await getTextEmbedding(caption);
+    const description = await getDescription(imageUrl);
+    const textEmbedding = await getTextEmbedding(description!);
 
     // Store in Supabase
-    await supabase.from("pdf_embeddings").insert({
+    const {data, error} = await supabase.from("pdf_embeddings").insert({
       file: file.name,
       page: i + 1,
+      description: description,
+      text_embedding: Array.from(textEmbedding!),
       image_embedding: Array.from(imgEmbedding),
       image_url: imageUrl,
     });
+
+    if (!error) {
+        if (i === pageImages.length -1) {
+            const outPut: UploadedFile = {id: Math.random().toString(36).substr(2, 9), name: file.name, size: file.size, uploadedAt: new Date()}
+            return outPut
+        } else {
+            console.log(`Finished page ${i}`)
+        }
+    } else {
+        throw new Error(error.message)
+    }
+
   }
 }
 
@@ -168,11 +222,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No files" }, { status: 400 });
     }
 
+    let uploadedFiles: UploadedFile[] = []
     for (const file of files) {
-      await ingestPdf(file);
+      const newFile = await ingestPdf(file);
+      uploadedFiles = [...uploadedFiles, newFile!]
     }
 
     return NextResponse.json({
+      files: uploadedFiles,
       message: "PDF processed with SigLIP (text + image embeddings)",
     });
   } catch (err: any) {
