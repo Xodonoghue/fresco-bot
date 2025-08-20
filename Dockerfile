@@ -1,33 +1,54 @@
-# Use a Debian-based Node image so sharp prebuilt binaries work cleanly
-FROM node:20-bookworm-slim
+# ---------- Builder ----------
+  FROM node:20-bookworm-slim AS builder
 
-# Install native deps required by pdf2pic and friends
-# - graphicsmagick: image processing backend used by pdf2pic
-# - ghostscript: to read PDFs for conversion
-# - curl: useful for health/debug
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    graphicsmagick ghostscript ca-certificates curl \
-  && rm -rf /var/lib/apt/lists/*
-
-# App directory
-WORKDIR /app
-
-# Install deps first (better caching)
-COPY package*.json ./
-RUN npm ci --omit=dev --legacy-peer-deps
-
-# Copy source
-COPY . .
-
-# Build (for Next.js etc.)
-RUN npm run build --legacy-peer-deps
-
-
-# Railway provides PORT; Next listens on it in production
-ENV NODE_ENV=production
-ENV PORT=3000
-
-EXPOSE 3000
-
-# Start Next.js
-CMD ["npm", "run", "start"]
+  # System deps for pdf2pic (gm+gs) and node-canvas (Cairo toolchain)
+  RUN apt-get update && apt-get install -y --no-install-recommends \
+    graphicsmagick ghostscript \
+    build-essential python3 pkg-config \
+    libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev \
+    ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
+  
+  WORKDIR /app
+  
+  # Install ALL deps (including dev) so Next/Tailwind can build
+  COPY package*.json ./
+  RUN npm ci --legacy-peer-deps
+  
+  # Copy source and build
+  COPY . .
+  # (Ensure tsconfig.json is at repo root and copied above)
+  RUN npm run build
+  
+  # Prune dev deps after building to prepare runtime node_modules
+  RUN npm prune --omit=dev --legacy-peer-deps
+  
+  
+  # ---------- Runner ----------
+  FROM node:20-bookworm-slim AS runner
+  
+  # Runtime libs only (no compilers). Keep gm + gs for pdf2pic at runtime.
+  RUN apt-get update && apt-get install -y --no-install-recommends \
+    graphicsmagick ghostscript \
+    libcairo2 libpango-1.0-0 libjpeg62-turbo libgif7 librsvg2-2 \
+    ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
+  
+  ENV NODE_ENV=production
+  ENV PORT=3000
+  # Optional: disable Next telemetry in containers
+  ENV NEXT_TELEMETRY_DISABLED=1
+  
+  WORKDIR /app
+  
+  # Copy minimal runtime artifacts
+  COPY --from=builder /app/package*.json ./
+  COPY --from=builder /app/node_modules ./node_modules
+  COPY --from=builder /app/.next ./.next
+  COPY --from=builder /app/public ./public
+  # If you have these, harmless to include:
+  COPY --from=builder /app/next.config.* ./ 
+  
+  EXPOSE 3000
+  CMD ["npm", "run", "start"]
+  

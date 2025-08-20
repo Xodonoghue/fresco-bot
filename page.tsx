@@ -1,13 +1,11 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useCallback, useRef } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "./components/ui/card"
+import { Button } from "./components/ui/button"
 import { Database, FileText, Upload, X, Loader2 } from "lucide-react"
-import PDFUploadPage from "@/components/pdf-upload"
-import ChatInterface from "@/components/chat-interface"
+import ChatInterface from "./components/chat-interface"
 import axios from "axios"
 
 interface UploadedFile {
