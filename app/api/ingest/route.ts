@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { fromBuffer } from "pdf2pic";
 import sharp from "sharp";
 import fs from "fs/promises";
-import { OpenAI } from "openai";
+import getOpenAI from "@/utils/openai-admin";
 import { getSupabaseAdmin } from "@/utils/supabase/supabase-admin";
 import {
   AutoTokenizer,
@@ -124,7 +124,7 @@ async function getDescription(imageUrl: string): Promise<string|null> {
     const prompt = `You are analyzing architectural drawings and plans. Your job is to scan the image below and provide a textual description describing everything you see in the image. This includes things like measurements, heights, counts of objects, material indicators, notes, scales dimensions etc. It is VITAL that you DON'T MAKE ANY INFORMATION UP. USE ONLY THE IMAGE to create this description>`;
 
   // 4️⃣ Send to GPT-4o (multimodal capable)
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const openai = getOpenAI();
   const response = await openai.chat.completions.create({
     model: "gpt-4.1-mini", // supports vision + text
     messages: [
