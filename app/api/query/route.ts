@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from "@/utils/supabase/supabase-admin";
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 import { getEnvVar } from "@/utils/env";
+import getOpenAI from "@/utils/openai-admin";
 import {
     AutoTokenizer,
     SiglipTextModel,
@@ -160,7 +161,7 @@ async function getTextEmbedding(text: string) {
   }
   
   // ---------- OpenAI ----------
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const openai = getOpenAI();
   
   // Phase 1: EXTRACT (structured, no prose)
   async function runExtractPhase(question: string, matches: Match[]) {
