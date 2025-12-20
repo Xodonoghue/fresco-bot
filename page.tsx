@@ -32,22 +32,22 @@ export default function KnowledgeChatbot() {
 
     const formData = new FormData();
     files.forEach((file, i) => {
-        formData.append("files", file); // all under "files" field
-        // or formData.append(`file_${i}`, file); if you want unique keys
+      formData.append("files", file); // all under "files" field
+      // or formData.append(`file_${i}`, file); if you want unique keys
     });
     try {
-        if (uploadedFiles.length === 0) {
-          await axios.post("/api/delete-all", {})
-        }
-        const res = await axios.post("/api/ingest", formData)
-        if (res.data.files){
-            setUploadedFiles((prevFiles) => [...prevFiles, ...res.data.files])
-        }
+      if (uploadedFiles.length === 0) {
+        await axios.post("/api/delete-all", {})
+      }
+      const res = await axios.post("/api/ingest", formData)
+      if (res.data.files) {
+        setUploadedFiles((prevFiles) => [...prevFiles, ...res.data.files])
+      }
     } catch {
-        console.log("error")
+      console.log("error")
     }
     setLoadingFiles([])
-}
+  }
 
   const handleFileInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,8 +91,8 @@ export default function KnowledgeChatbot() {
 
   const removeFile = useCallback(async (fileId: string) => {
     const file = uploadedFiles.find(f => f.id === fileId);
-    if (!file) return; 
-  
+    if (!file) return;
+
     try {
       await axios.post("/api/delete-specific", { file: file.name });
       setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
@@ -119,7 +119,7 @@ export default function KnowledgeChatbot() {
               <Database className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Fresco Construction Agent</h1>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">RAG Construction Agent</h1>
               <p className="text-slate-600 dark:text-slate-400">Upload documents and get specific answers</p>
             </div>
           </div>
@@ -129,7 +129,7 @@ export default function KnowledgeChatbot() {
       <div className="max-w-7xl mx-auto p-4">
         <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 h-[calc(100vh-140px)]">
           {/* Chat Section */}
-          <div className="flex flex-col mx-auto w-7/12">
+          <div className="flex flex-col mx-auto w-11/12 md:w-7/12">
             <div className="mb-4">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Chat with Agent</h2>
               <p className="text-sm text-slate-600 dark:text-slate-400">Ask questions about your uploaded documents</p>
@@ -172,11 +172,10 @@ export default function KnowledgeChatbot() {
 
                       <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700">
                         <div
-                          className={`border-2 border-dashed rounded-lg p-3 transition-colors cursor-pointer ${
-                            isDragOver
-                              ? "border-blue-400 bg-blue-50 dark:bg-blue-950/20"
-                              : "border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500"
-                          }`}
+                          className={`border-2 border-dashed rounded-lg p-3 transition-colors cursor-pointer ${isDragOver
+                            ? "border-blue-400 bg-blue-50 dark:bg-blue-950/20"
+                            : "border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500"
+                            }`}
                           onDragOver={handleDragOver}
                           onDragLeave={handleDragLeave}
                           onDrop={handleDrop}
@@ -222,20 +221,18 @@ export default function KnowledgeChatbot() {
                 </div>
               ) : (
                 <Card
-                  className={`h-full flex items-center justify-center border-dashed border-2 transition-colors ${
-                    isDragOver
-                      ? "border-blue-400 bg-blue-50 dark:bg-blue-950/20"
-                      : "border-slate-300 dark:border-slate-600"
-                  }`}
+                  className={`h-full flex items-center justify-center border-dashed border-2 transition-colors ${isDragOver
+                    ? "border-blue-400 bg-blue-50 dark:bg-blue-950/20"
+                    : "border-slate-300 dark:border-slate-600"
+                    }`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                 >
                   <CardContent className="text-center p-8">
                     <div
-                      className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors ${
-                        isDragOver ? "bg-blue-100 dark:bg-blue-900/30" : "bg-slate-100 dark:bg-slate-800"
-                      }`}
+                      className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors ${isDragOver ? "bg-blue-100 dark:bg-blue-900/30" : "bg-slate-100 dark:bg-slate-800"
+                        }`}
                     >
                       {isDragOver ? (
                         <Upload className="w-8 h-8 text-blue-500" />
@@ -268,21 +265,21 @@ export default function KnowledgeChatbot() {
                       </>
                     )}
                     {loadingFiles.map((file, i) => (
-                          <div
-                            key={i}
-                            className="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800"
-                          >
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <Loader2 className="w-4 h-4 text-blue-500 flex-shrink-0 animate-spin" />
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
-                                  {file.name}
-                                </p>
-                                <p className="text-xs text-blue-600 dark:text-blue-400">Processing...</p>
-                              </div>
-                            </div>
+                      <div
+                        key={i}
+                        className="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800"
+                      >
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <Loader2 className="w-4 h-4 text-blue-500 flex-shrink-0 animate-spin" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                              {file.name}
+                            </p>
+                            <p className="text-xs text-blue-600 dark:text-blue-400">Processing...</p>
                           </div>
-                        ))}
+                        </div>
+                      </div>
+                    ))}
                   </CardContent>
                 </Card>
               )}

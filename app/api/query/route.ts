@@ -170,7 +170,7 @@ async function getTextEmbedding(text: string) {
     "scale_candidates": [ { "text": string, "confidence": number } ],
     "units_candidates": [ { "text": string, "confidence": number } ],
     "legend_items": [ { "symbol": string, "meaning": string } ],
-    "notes_candidates": [ { "text": string } ],
+    "notes_candidates": [ { "text": string } ],  
     "schedule_snippets": [ { "kind": "door|window|finish|other", "snippet": string } ],
     "observations": [ string ]
   }
@@ -179,9 +179,10 @@ async function getTextEmbedding(text: string) {
     const prompt = `You extract structured facts from architectural drawings.
   - Identify any declared drawing scales and likely units.
   - Extract legend pairs (symbol → meaning) if visible.
-  - Extract notes and any schedules/snippets.
+  - Extract all schedules and notes from the image.
   - Do NOT answer the user's question here.
   - Output strict JSON only (no markdown, no prose).
+  - It is VITAL that you only document REAL information you observe do not make anything up.
   ${schema}`;
   
     const completion = await openai.chat.completions.create({
@@ -229,10 +230,10 @@ async function getTextEmbedding(text: string) {
     const guidance = `You are answering a question about architectural drawings using ONLY what is visible in the provided images and the extracted data.
   
   Rules:
-  - Prefer explicit dimensions, schedule entries, and notes.
+  - Prefer explicit dimensions and notes.
   - If you cannot be certain, provide your best answer AND list assumptions.
   - Keep "answer" concise and concrete.
-  - Provide at least one evidence item (image_url is acceptable if bbox unknown).
+  - Provide at least one evidence item file and page number.
   - Output strict JSON only. No markdown. No extra text.
   
   ${answerSchema}
@@ -308,6 +309,7 @@ async function queryPdf(question: string) {
 
   // 3) Phase 1: Extract
   const extracted = await runExtractPhase(question, visionMatches);
+  console.log(extracted)
 
   // 4) Phase 2: Answer
   const answerJson = await runAnswerPhase(question, visionMatches, extracted);

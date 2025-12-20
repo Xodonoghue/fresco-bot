@@ -15,20 +15,20 @@ import {
 } from "@xenova/transformers";
 
 interface UploadedFile {
-    id: string
-    name: string
-    size: number
-    uploadedAt: Date
-  }
+  id: string
+  name: string
+  size: number
+  uploadedAt: Date
+}
 
 // Temporary storage
 const UPLOAD_DIR = "/tmp/pdf_uploads";
 const UPLOAD_BUCKET = 'img-assets'
 
 function normalizeEmbedding(vec: Float32Array): Float32Array {
-    const norm = Math.sqrt(vec.reduce((sum, v) => sum + v * v, 0));
-    return new Float32Array(vec.map((v) => v / norm));
-  }
+  const norm = Math.sqrt(vec.reduce((sum, v) => sum + v * v, 0));
+  return new Float32Array(vec.map((v) => v / norm));
+}
 
 // ---------- IMAGE HELPERS ----------
 async function bufferToRawImage(imgBuffer: Buffer) {
@@ -120,8 +120,8 @@ async function getImageEmbedding(imgBuffer: Buffer) {
 }
 
 // simple-qwen-call.ts
-async function getDescription(imageUrl: string): Promise<string|null> {
-    const prompt = `You are analyzing architectural drawings and plans. Your job is to scan the image below and provide a textual description describing everything you see in the image. This includes things like measurements, heights, counts of objects, material indicators, notes, scales dimensions etc. It is VITAL that you DON'T MAKE ANY INFORMATION UP. USE ONLY THE IMAGE to create this description>`;
+async function getDescription(imageUrl: string): Promise<string | null> {
+  const prompt = `You are analyzing architectural drawings and plans. Your job is to scan the image below and provide a textual description describing everything you see in the image. This includes things like measurements, heights, counts of objects, material indicators, notes, scales dimensions etc. It is VITAL that you DON'T MAKE ANY INFORMATION UP. USE ONLY THE IMAGE to create this description>`;
 
   // 4️⃣ Send to GPT-4o (multimodal capable)
   const openai = getOpenAI();
@@ -135,7 +135,7 @@ async function getDescription(imageUrl: string): Promise<string|null> {
           { type: "text", text: prompt },
           {
             type: "image_url",
-            image_url: {url: imageUrl},
+            image_url: { url: imageUrl },
           },
         ],
       },
@@ -143,8 +143,8 @@ async function getDescription(imageUrl: string): Promise<string|null> {
   });
 
   return response.choices[0].message.content;
-  }
-  
+}
+
 
 // ---------- MAIN INGEST ----------
 async function ingestPdf(file: File): Promise<UploadedFile | undefined> {
@@ -179,7 +179,7 @@ async function ingestPdf(file: File): Promise<UploadedFile | undefined> {
     const textEmbedding = await getTextEmbedding(description!);
 
     // Store in Supabase
-    const {data, error} = await supabase.from("pdf_embeddings").insert({
+    const { data, error } = await supabase.from("pdf_embeddings").insert({
       file: file.name,
       page: i + 1,
       description: description,
@@ -189,14 +189,14 @@ async function ingestPdf(file: File): Promise<UploadedFile | undefined> {
     });
 
     if (!error) {
-        if (i === pageImages.length -1) {
-            const outPut: UploadedFile = {id: Math.random().toString(36).substr(2, 9), name: file.name, size: file.size, uploadedAt: new Date()}
-            return outPut
-        } else {
-            console.log(`Finished page ${i}`)
-        }
+      if (i === pageImages.length - 1) {
+        const outPut: UploadedFile = { id: Math.random().toString(36).substr(2, 9), name: file.name, size: file.size, uploadedAt: new Date() }
+        return outPut
+      } else {
+        console.log(`Finished page ${i}`)
+      }
     } else {
-        throw new Error(error.message)
+      throw new Error(error.message)
     }
 
   }

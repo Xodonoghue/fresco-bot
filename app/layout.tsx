@@ -4,7 +4,7 @@ import { GeistMono } from 'geist/font/mono'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Fresco bot',
+  title: 'RAG bot',
 }
 
 export default function RootLayout({
